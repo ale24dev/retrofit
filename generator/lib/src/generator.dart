@@ -629,8 +629,8 @@ class RetrofitGenerator extends GeneratorForAnnotation<retrofit.RestApi> {
     String returnAsyncWrapper =
         m.returnType.isDartAsyncFuture ? 'return' : 'yield';
     if (callAdapter != null) {
-      final callAdapterOriginalReturnType = callAdapter.superclass
-        ?.typeArguments.firstOrNull as InterfaceType?;
+      final callAdapterOriginalReturnType =
+          callAdapter.superclass?.typeArguments.firstOrNull as InterfaceType?;
       returnAsyncWrapper = _isReturnTypeFuture(
               callAdapterOriginalReturnType?.getDisplayString() ?? '')
           ? 'return'
@@ -2063,23 +2063,24 @@ ${bodyName.displayName} == null
 
         if (isFileField) {
           if (p.type.isNullable) {
-            blocks.add(Code('if (${p.displayName} != null){'));
+            blocks.add(Code('if (${p.displayName} != null) {'));
           }
           final fileNameValue = r.peek('fileName')?.stringValue;
           final fileName = fileNameValue != null
               ? literalString(fileNameValue)
               : refer(p.displayName)
-                  .property('path.split(Platform.pathSeparator).last');
+                  .property('path')
+                  .property('split')
+                  .call([refer('Platform.pathSeparator')]).property('last');
 
           final uploadFileInfo = refer('$MultipartFile.fromFileSync').call([
             refer(p.displayName).property('path'),
           ], {
             'filename': fileName,
             if (contentType != null)
-              'contentType':
-                  refer('DioMediaType', 'package:dio/dio.dart')
-                      .property('parse')
-                      .call([literal(contentType)]),
+              'contentType': refer('DioMediaType', 'package:dio/dio.dart')
+                  .property('parse')
+                  .call([literal(contentType)]),
           });
 
           final optionalFile = m.parameters
@@ -2091,7 +2092,7 @@ ${bodyName.displayName} == null
               refer(dataVar).property('files').property('add').call([
             refer('MapEntry').newInstance([literal(fieldName), uploadFileInfo]),
           ]).statement;
-          if (optionalFile) {
+          if (optionalFile || p.type.isNullable) {
             final condition = refer(p.displayName).notEqualTo(literalNull).code;
             blocks.addAll(
               [
@@ -2318,10 +2319,9 @@ ${bodyName.displayName} == null
                   "jsonEncode(${p.displayName}${p.type.nullabilitySuffix == NullabilitySuffix.question ? ' ?? <String,dynamic>{}' : ''})",
                 ),
               ], {
-                'contentType':
-                    refer('DioMediaType', 'package:dio/dio.dart')
-                        .property('parse')
-                        .call([literal(contentType)]),
+                'contentType': refer('DioMediaType', 'package:dio/dio.dart')
+                    .property('parse')
+                    .call([literal(contentType)]),
               });
 
               final optionalFile = m.parameters
