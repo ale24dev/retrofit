@@ -2062,9 +2062,6 @@ ${bodyName.displayName} == null
         final contentType = r.peek('contentType')?.stringValue;
 
         if (isFileField) {
-          if (p.type.isNullable) {
-            blocks.add(Code('if (${p.displayName} != null) {'));
-          }
           final fileNameValue = r.peek('fileName')?.stringValue;
           final fileName = fileNameValue != null
               ? literalString(fileNameValue)
@@ -2092,6 +2089,7 @@ ${bodyName.displayName} == null
               refer(dataVar).property('files').property('add').call([
             refer('MapEntry').newInstance([literal(fieldName), uploadFileInfo]),
           ]).statement;
+
           if (optionalFile || p.type.isNullable) {
             final condition = refer(p.displayName).notEqualTo(literalNull).code;
             blocks.addAll(
@@ -2105,9 +2103,6 @@ ${bodyName.displayName} == null
             );
           } else {
             blocks.add(returnCode);
-          }
-          if (p.type.isNullable) {
-            blocks.add(const Code('}'));
           }
         } else if (_displayString(p.type) == 'List<int>') {
           final optionalFile = m.parameters
